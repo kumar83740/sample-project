@@ -1,0 +1,101 @@
+﻿@model IEnumerable<UserDemographicsApp.ViewModels.ResponseViewModel>
+
+<h2>Anonymous Responses</h2>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.0.1/css/buttons.dataTables.min.css">
+
+<table class="table" id="responseTable">
+    <thead>
+        <tr>
+            <th>User Name</th>
+            <th>Question</th>
+            <th>Response</th>
+            <th>Additional Text</th>
+            <th>Country</th>
+            <th>State</th>
+            <th>Languages</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var response in Model)
+        {
+            <tr>
+                <td>Anonymous</td>
+                <td>@response.QuestionText</td>
+                <td>@response.OptionText</td>
+                <td>@response.AdditionalText</td>
+                <td>@response.CountryName</td>
+                <td>@response.StateName</td>
+                <td>@response.SelectedLanguages</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.0.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.0.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+
+    <style>
+        .custom-button {
+            background-color: #4CAF50; /* Green */
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 12px;
+        }
+    </style>
+
+    <script>
+        $(document).ready(function () {
+            var table = $('#responseTable').DataTable({
+                "paging": true,
+                "searching": true,
+                "ordering": true,
+                "order": [[1, 'asc']], // Initial sorting on the second column (Question)
+                "columns": [
+                    null, // User Name
+                    null, // Question
+                    null, // Response
+                    null, // Additional Text
+                    null, // Country
+                    null, // State
+                    null  // Languages
+                ],
+                "dom": 'Bfrtip',
+                "buttons": [
+                    {
+                        extend: 'excelHtml5',
+                        text: '<i class="fas fa-file-excel"></i> Export to Excel',
+                        className: 'custom-button'
+                    }
+                ],
+                initComplete: function () {
+                    // Apply custom styles to the button
+                    $('.dt-buttons .custom-button').css({
+                        'background-color': '#4CAF50',
+                        'border': 'none',
+                        'color': 'white',
+                        'padding': '10px 20px',
+                        'text-align': 'center',
+                        'text-decoration': 'none',
+                        'display': 'inline-block',
+                        'font-size': '14px',
+                        'margin': '4px 2px',
+                        'cursor': 'pointer',
+                        'border-radius': '12px'
+                    });
+                }
+            });
+        });
+    </script>
+}

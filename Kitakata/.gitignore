@@ -1,0 +1,11 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/kitakata/FileContentIndex
+/.vs/kitakata/v17
+/.vs
+/UserDemographicsApp/.vs
+/UserDemographicsApp/UserDemographicsApp/obj
+/UserDemographicsApp/UserDemographicsApp/bin/Debug/net8.0
+/UserDemographicsApp/UserDemographicsApp/bin/Release/net8.0

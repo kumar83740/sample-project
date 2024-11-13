@@ -1,0 +1,35 @@
+﻿@model IEnumerable<UserDemographicsApp.ViewModels.ResponseViewModel>
+
+@{
+    ViewData["Title"] = "Named Responses";
+}
+
+<h2>Named Responses</h2>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+
+@* Use the shared partial view *@
+@await Html.PartialAsync("_ResponseTable", Model)
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('.table').DataTable({
+                "paging": true,
+                "searching": true,
+                "ordering": true,
+                "order": [[1, 'asc']], // Initial sorting on the second column (Question)
+                "columns": [
+                    null, // User Name
+                    null, // Question
+                    null, // Response
+                    null, // Additional Text
+                    null, // Country
+                    null, // State
+                    null  // Languages
+                ]
+            });
+        });
+    </script>
+}

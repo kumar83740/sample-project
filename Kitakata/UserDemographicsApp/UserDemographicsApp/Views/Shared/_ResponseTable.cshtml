@@ -1,0 +1,30 @@
+﻿@model IEnumerable<UserDemographicsApp.ViewModels.ResponseViewModel>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>User Name</th>
+            <th>Question</th>
+            <th>Response</th>
+            <th>Additional Text</th>
+            <th>Country</th>
+            <th>State</th>
+            <th>Languages</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var response in Model)
+        {
+            <tr>
+                <td>@response.UserName</td>
+                <td>@response.QuestionText</td>
+                <td>@response.OptionText</td>
+                <td>@response.AdditionalText</td>
+                <td>@response.CountryName</td>
+                <td>@response.StateName</td>
+                <td>@response.SelectedLanguages</td>
+            </tr>
+        }
+    </tbody>
+</table>
+

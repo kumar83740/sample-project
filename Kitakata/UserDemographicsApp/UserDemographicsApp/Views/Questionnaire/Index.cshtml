@@ -1,0 +1,229 @@
+﻿@using UserDemographicsApp.ViewModels
+@model QuestionnaireViewModel
+
+@{
+    ViewData["Title"] = "Demographic Survey";
+}
+
+<!-- Terms and Conditions Modal -->
+<div></div>
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="termsModalLabel">Disclaimer</h5>
+            </div>
+            <div class="modal-body">
+                <p>
+                    Thank you again for your participation in the <strong>Demographic Survey</strong> led by our client, Meta. In the second phase of the survey, Meta requires that you sign the enclosed consent forms issued by Meta.
+                </p>
+                <p>
+                    We draw your attention to the fact that you are signing/accepting the consent forms directly with Meta. For the avoidance of doubt, we confirm that we are only organizing the survey administration aspects of Meta's project on Meta’s behalf.
+                </p>
+                <p>
+                    By pursuing your further participation in <strong>Demographic Survey</strong>, you recognize and acknowledge that RWS/we bear no contractual or legal responsibility or liability relating to the consent forms and/or your acceptance of it.
+                </p>
+                <p>
+                    Any questions that you may have on the consent forms should be directed to Meta, including any Data Subject Requests, which Meta will respond to in their capacity as a data controller.
+                </p>
+
+                </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="acceptTermsBtn">OK</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+<form asp-action="Submit" method="post" id="surveyForm">
+    
+    <input type="hidden" name="UserId" value="@Model.UserId" />
+    <!-- Email Address Field -->
+    <div class="form-group">
+        <label for="userEmailId"><strong>Email Address</strong> <span class="text-danger">*</span></label>
+        <input type="email" name="UserEmailId" id="userEmailId" class="form-control" required />
+        <span asp-validation-for="UserEmailId" class="text-danger"></span>
+    </div>
+    @if (Model.Questions != null)
+    {
+        @foreach (var question in Model.Questions)
+        {
+            <div class="form-group">
+                <label> <strong>@question.QuestionText </strong><span class="text-danger">*</span></label>
+                <div class="question-options">
+                    @if (Model.Options != null)
+                    {
+                        var options = Model.Options.Where(o => o.QuestionId == question.QuestionId).ToList();
+
+                        @foreach (var option in options)
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="Responses[@question.QuestionId]" value="@option.OptionId" data-option-text="@option.OptionText" required />
+                                <label class="form-check-label" for="@option.OptionId">  @option.OptionText</label>
+
+                                @if (!string.IsNullOrEmpty(option.OptionInfo))
+                                {
+                                    <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="@option.OptionInfo"></i>
+                                }
+                            </div>
+                        }
+
+                        // Add text box for 'Other' option if available
+                        if (options.Any(o => o.OptionText.Contains("Other (please specify)")))
+                        {
+                            <input type="text" name="AdditionalTexts[@question.QuestionId]" class="form-control other-specify" placeholder="Other (please specify)" style="display:none;" />
+                        }
+                    }
+                    else
+                    {
+                        <p>No options available.</p>
+                    }
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <p>No questions available.</p>
+    }
+
+    <div class="form-group">
+        <label><strong>What is your Mother tongue?</strong> <span class="text-danger">*</span></label>
+        <select name="SelectedLanguageIds" class="form-control" multiple required>
+            @foreach (var language in Model.Languages)
+            {
+                <option value="@language.LanguageId">@language.Name</option>
+            }
+        </select>
+    </div>
+    <div class="form-group">
+        <label><strong>What is your country of residency at the time of test-taking? </strong><span class="text-danger">*</span></label>
+        <select name="SelectedCountryId" class="form-control" id="countryDropdown" required>
+            <option value="">Select Country</option>
+            @if (Model.Countries != null)
+            {
+                @foreach (var country in Model.Countries)
+                {
+                    <option value="@country.CountryId">@country.CountryName</option>
+                }
+            }
+        </select>
+    </div>
+    <div class="form-group" id="stateDropdown" style="display: none;">
+        <label><strong>Select State </strong><span class="text-danger">*</span></label>
+        <select name="StateId" class="form-control" id="stateDropdownSelect">
+            <option value="">Select State</option>
+            @foreach (var state in Model.States)
+            {
+                <option value="@state.StateID" data-country-id="@state.CountryId">@state.StateName</option>
+            }
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            // Show the modal when the page loads
+            $('#termsModal').modal('show');
+
+            // Handle the accept button click
+            $('#acceptTermsBtn').click(function () {
+                $('#termsModal').modal('hide');
+            });
+
+            $('[data-toggle="tooltip"]').tooltip();
+
+            // Conditional display of the state dropdown
+            $('#countryDropdown').change(function () {
+                var selectedCountryId = parseInt($(this).val());
+                if (selectedCountryId === 41 || selectedCountryId === 237) {
+                    $('#stateDropdown').show();
+                    filterStates(selectedCountryId);
+                } else {
+                    $('#stateDropdown').hide();
+                    $('#stateDropdownSelect').val('');
+                }
+            });
+
+            // Form validation for mandatory questions
+            $('#surveyForm').submit(function (event) {
+                var isValid = true;
+                $('.text-danger.validation-error').remove();
+
+                // Check if all questions are answered
+                $('.question-options').each(function () {
+                    if ($(this).find('.form-check-input:checked').length === 0) {
+                        isValid = false;
+                        $(this).before('<span class="text-danger validation-error">This question is required.</span>');
+                    }
+                });
+
+                // Check if a state is selected when required
+                if ($('#stateDropdown').is(':visible') && $('#stateDropdownSelect').val() === '') {
+                    isValid = false;
+                    $('#stateDropdown label').after('<span class="text-danger validation-error">This field is required.</span>');
+                }
+
+                if (!isValid) {
+                    event.preventDefault();
+                }
+            });
+
+            // Remove validation messages on change
+            $('.form-check-input').change(function () {
+                $(this).closest('.form-group').find('.validation-error').remove();
+            });
+
+            $('#stateDropdownSelect').change(function () {
+                $('#stateDropdown .validation-error').remove();
+            });
+
+            // Filter states based on selected country
+            function filterStates(countryId) {
+                $('#stateDropdownSelect option').each(function () {
+                    var stateCountryId = parseInt($(this).data('country-id'));
+                    if (stateCountryId === countryId) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+                $('#stateDropdownSelect').val('');
+            }
+
+        });
+
+        document.querySelectorAll('.form-check-input').forEach(function (radio) {
+            radio.addEventListener('change', function () {
+                var questionGroup = this.closest('.form-group');
+                var otherSpecifyInput = questionGroup.querySelector('.other-specify');
+
+                var isOtherOption = Array.from(questionGroup.querySelectorAll('.form-check-input')).some(function (input) {
+                    return input.nextElementSibling.textContent.includes('Other (please specify)');
+                });
+
+                if (isOtherOption && this.nextElementSibling.textContent.includes('Other (please specify)')) {
+                    otherSpecifyInput.style.display = 'block';
+                } else {
+                    otherSpecifyInput.style.display = 'none';
+                    otherSpecifyInput.value = ''; // Clear the input when not visible
+                }
+            });
+        });
+
+        document.getElementById('countryDropdown').addEventListener('change', function () {
+            var countryId = parseInt(this.value);
+            var stateDropdown = document.getElementById('stateDropdown');
+            if (countryId === 41 || countryId === 237) {
+                stateDropdown.style.display = 'block';
+            } else {
+                stateDropdown.style.display = 'none';
+            }
+        });
+
+    </script>
+}

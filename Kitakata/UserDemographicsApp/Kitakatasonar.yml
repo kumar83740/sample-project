@@ -1,0 +1,74 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+trigger: none
+pool:
+  name: BusinessApplications
+  demands:
+  - Agent.Name -equals DevopsAgent
+  - Agent.Version -equals 3.244.1
+steps:
+## Prepare analysis configuration
+- task: SonarQubePrepare@6
+  displayName: 'Prepare SonarQube Analysis'
+  inputs:
+    SonarQube: 'Kitakata'
+    scannerMode: 'MSBuild'
+    projectKey: 'Kitakata'
+    projectName: 'Kitakata'
+    extraProperties: |
+      # Additional properties that will be passed to the scanner, 
+      # Put one key=value per line, example:
+      # sonar.exclusions=**/*.bin
+      sonar.cs.opencover.reportsPaths=$(Build.SourcesDirectory)/TestResults/coverage.opencover.xml
+##.NET Core 
+- task: UseDotNet@2
+  displayName: '.NET Core'
+  inputs:
+    packageType: 'sdk'
+    version: '8.0.401'
+##dotnet restore    
+- task: DotNetCoreCLI@2
+  displayName: '.NET restore'
+  inputs:
+    command: 'restore'
+    projects: '**/*.sln'
+    feedsToUse: 'select'
+##dotnet build    
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet build'
+  inputs:
+    command: 'build'
+    projects: '**/*.sln'
+    arguments: '--configuration Release --output $(Build.StagingDirectory)'
+##dotnet publish    
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet publish'
+  inputs:
+    command: 'publish'
+    publishWebProjects: false
+    projects: '**/*.sln'
+    arguments: '--configuration Release --output $(Build.StagingDirectory)'
+    zipAfterPublish: false
+##dotnet test    
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet test'
+  inputs:
+    command: 'test'
+    projects: '**/*.sln'
+    arguments: '--collect:"XPlat Code Coverage"'
+##Run Code Analysis
+- task: SonarQubeAnalyze@6
+  displayName: 'Run Code Analysis'
+  inputs:
+    jdkversion: 'JAVA_HOME'
+##Publish CodeWordGenerator build artifact    
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish CodeWordGenerator build artifact'
+  inputs:
+    PathtoPublish: '$(Build.StagingDirectory)'
+    ArtifactName: 'Kitakata'
+    publishLocation: 'Container'
+
+
